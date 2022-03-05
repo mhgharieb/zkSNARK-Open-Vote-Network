@@ -13,10 +13,14 @@ This is the proof of concept of our paper "Dispute-free Scalable Open Vote Netwo
 # Execution
  - Run `./setup.sh -d [DESIGN_TO_BE_USED] -n [NUMBER_of_VOTERS]`
     where `[DESIGN_TO_BE_USED]` could be:
-        `original`: Our original proposed design
-        `sha256`: The first enhancement using Sha256
-        `progressiveSha256`: The second enhancement using Sha256
-        `progressivePoseidon`: The second enhancement using Poseidon
+ 
+	 - `original`: Our original proposed design
+	 - `sha256`: The first enhancement using Sha256
+	 - `progressiveSha256`: The second enhancement using Sha256
+	 - `progressivePoseidon`: The second enhancement using Poseidon
+
+     For example `./setup.sh -d "original" -n 3`
+
  - Check the test code in the file `test/completeTest.js`
  - Run the local Ethereum node: `ganache-cli -l 30e6 -a [[NUMBER_of_VOTERS + 2]]` 
  - Run the command `truffle test` to view the result and the gas cost of each transaction
