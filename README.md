@@ -11,6 +11,7 @@ This is the proof of concept of our paper "Dispute-free Scalable Open Vote Netwo
 
 
 # Execution
+ - `cd build`
  - Run `./setup.sh -d [DESIGN_TO_BE_USED] -n [NUMBER_of_VOTERS]`
     where `[DESIGN_TO_BE_USED]` could be:
  
