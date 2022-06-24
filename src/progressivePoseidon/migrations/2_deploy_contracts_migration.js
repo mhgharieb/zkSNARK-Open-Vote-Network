@@ -15,7 +15,7 @@ module.exports = async function(deployer, network, accounts) {
             gas: 30000000
             });
     const poseidonT4contract = new web3.eth.Contract(poseidonUnit.generateABI(3));
-    const poseidonT4Instance = await poseidonT3contract.deploy({
+    const poseidonT4Instance = await poseidonT4contract.deploy({
             data: poseidonUnit.createCode(3)
             }).send({
             from: accounts[0],
