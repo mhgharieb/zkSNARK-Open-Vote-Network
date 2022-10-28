@@ -80,6 +80,7 @@ contract('eVote', async (accounts) => {
         _merkleProof = usersMerkleTree.getHexProof(accounts[accounts.length-2])            
         try{
             await eVoteInstance.register(data[0].publicKey, data[0].publicKeyProof.a, data[0].publicKeyProof.b, data[0].publicKeyProof.c, _merkleProof, {from:accounts[accounts.length-1], value:web3.utils.toWei("1","ether")})
+            assert(false, 'Expected error but none was thrown')
         } catch(err) {
            assert(String(err).includes("Invalid Merkle proof"), "error in verifying invalid user")
         }
@@ -93,6 +94,7 @@ contract('eVote', async (accounts) => {
         _merkleProof = usersMerkleTree.getHexProof(accounts[i+1])
         try{
             await eVoteInstance.register(data[i].publicKey, data[i-1].publicKeyProof.a, data[i].publicKeyProof.b, data[i].publicKeyProof.c, _merkleProof, {from:accounts[i+1], value:web3.utils.toWei("1","ether")})
+            assert(false, 'Expected error but none was thrown')
         } catch(err) {
             assert(String(err).includes("Invalid DL proof"), "error in verifying invalid DL proof")
         }
@@ -119,6 +121,7 @@ contract('eVote', async (accounts) => {
         _merkleProof = usersMerkleTree.getHexProof(accounts[accounts.length-2])            
         try{
             await eVoteInstance.register(data[0].publicKey, data[0].publicKeyProof.a, data[0].publicKeyProof.b, data[0].publicKeyProof.c, _merkleProof, {from:accounts[accounts.length-1], value:web3.utils.toWei("1","ether")})
+            assert(false, 'Expected error but none was thrown')
         } catch(err) {
            assert(String(err).includes("Max number of voters is reached"), "error in verifying max number of voters")
         }
@@ -137,6 +140,7 @@ contract('eVote', async (accounts) => {
         i = data.length-1;    
         try{
             await eVoteInstance.castVote(data[i-1].encryptedVote, data[i].Idx, data[i].encryptedVoteProof.a, data[i].encryptedVoteProof.b, data[i].encryptedVoteProof.c, {from:accounts[i+1]})
+            assert(false, 'Expected error but none was thrown')
         } catch(err) {
             assert(String(err).includes("Invalid encrypted vote"), "error in verifying invalid encrypted")
         }    
@@ -163,6 +167,7 @@ contract('eVote', async (accounts) => {
         await mineToBlockNumber(beginTally)        
         try{
             await eVoteInstance.setTally(_tallyingResult + 1, _tallyingProof.a, _tallyingProof.b, _tallyingProof.c,{from:admin});
+            assert(false, 'Expected error but none was thrown')
         } catch(err) {
             assert(String(err).includes("Invalid Tallying Result"), "error in verifying Malicious Administrator")
         }
