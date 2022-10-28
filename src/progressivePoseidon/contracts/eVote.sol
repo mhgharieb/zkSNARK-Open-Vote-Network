@@ -59,10 +59,11 @@ contract eVote {
             bytes32[] memory _merkleProof
         ) public payable{
         require(msg.value==DEPOSIT,"Invalid deposit value");
-        require(voters.length + 1 <= nVoters, "Max number of voters is reached");
         require(block.number<finishRegistartionBlockNumber,"Registration phase is already closed");
-        require(vMerkleProof.verifyProof(_merkleProof, usersMerkleTreeRoot, keccak256(abi.encodePacked(msg.sender))), "Invalid Merkle proof");
         require(vzkSNARK.verifyProof(proof_a, proof_b, proof_c, _pubKey, 0),"Invalid DL proof");
+        require(publicKeys[msg.sender][0] == 0 && publicKeys[msg.sender][1] == 0, "Updating the public key is not allowed");
+        require(voters.length + 1 <= nVoters, "Max number of voters is reached");
+        require(vMerkleProof.verifyProof(_merkleProof, usersMerkleTreeRoot, keccak256(abi.encodePacked(msg.sender))), "Invalid Merkle proof");
         voters.push(msg.sender);
         publicKeys[msg.sender] = [_pubKey[0], _pubKey[1]];
         hashVotingKeysY = poseidonT3.poseidon([hashVotingKeysY, _pubKey[1]]);
@@ -78,6 +79,7 @@ contract eVote {
         ) public {
         require(block.number >= finishRegistartionBlockNumber && block.number < finishVotingBlockNumber, "Voting phase is already closed");
         require( msg.sender == voters[_Idx], "Unregistered voter");
+        require(encryptedVotes[msg.sender][0] == 0 && encryptedVotes[msg.sender][1] == 0, "Updating the encrypted vote is not allowed");
         
 
         if (noHashOnesVotingKeysY == false){

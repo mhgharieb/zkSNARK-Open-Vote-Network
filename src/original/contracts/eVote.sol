@@ -48,11 +48,13 @@ contract eVote {
             bytes32[] memory _merkleProof
         ) public payable{
         require(msg.value==DEPOSIT,"Invalid deposit value");
-        require(voters.length + 1 <= nVoters, "Max number of voters is reached");
         require(block.number<finishRegistartionBlockNumber,"Registration phase is already closed");
-        require(vMerkleProof.verifyProof(_merkleProof, usersMerkleTreeRoot, keccak256(abi.encodePacked(msg.sender))), "Invalid Merkle proof");
         require(vzkSNARK.verifyProof(proof_a, proof_b, proof_c, _pubKey, 0),"Invalid DL proof");
-        voters.push(msg.sender);
+        if (publicKeys[msg.sender][0] == 0 && publicKeys[msg.sender][1] == 0){
+            require(voters.length + 1 <= nVoters, "Max number of voters is reached");
+            require(vMerkleProof.verifyProof(_merkleProof, usersMerkleTreeRoot, keccak256(abi.encodePacked(msg.sender))), "Invalid Merkle proof");
+            voters.push(msg.sender);
+        }
         publicKeys[msg.sender] = [_pubKey[0], _pubKey[1]];
     }
     function castVote(

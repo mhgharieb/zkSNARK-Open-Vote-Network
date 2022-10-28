@@ -27,9 +27,9 @@ contract('eVote', async (accounts) => {
         data = await genTestData(nVoters)
         let encryptedVotes = [];
         let expectedTallyingResult = 0;    
-    for (i=0; i<data.length;i++){
-        encryptedVotes.push(data[i].encryptedVote);
-        expectedTallyingResult += data[i].Vote;
+        for (i=0; i<data.length;i++){
+            encryptedVotes.push(data[i].encryptedVote);
+            expectedTallyingResult += data[i].Vote;
         }
         const { tallyingProof, tallyingResult } = await tallying(encryptedVotes)
         assert(expectedTallyingResult == tallyingResult, "Error: Tallying Result provided by the Tallying circuit is not equal to the expected Tallying result")
@@ -89,11 +89,12 @@ contract('eVote', async (accounts) => {
     it('Throw an error if elligable user provides invalid DL proof to vote', async() =>{
         snapShot = await takeSnapshot()
         snapshotId = snapShot['result']
-        _merkleProof = usersMerkleTree.getHexProof(accounts[1])        
+        i = data.length -1
+        _merkleProof = usersMerkleTree.getHexProof(accounts[i+1])
         try{
-            await eVoteInstance.register(data[0].publicKey, data[0].publicKeyProof.a, data[0].publicKeyProof.b, data[0].publicKeyProof.c, _merkleProof, {from:accounts[1], value:web3.utils.toWei("1","ether")})
+            await eVoteInstance.register(data[i].publicKey, data[i-1].publicKeyProof.a, data[i].publicKeyProof.b, data[i].publicKeyProof.c, _merkleProof, {from:accounts[i+1], value:web3.utils.toWei("1","ether")})
         } catch(err) {
-            assert(String(err).includes("Invalid DL proof"), "error in verifying invalid user")
+            assert(String(err).includes("Invalid DL proof"), "error in verifying invalid DL proof")
         }
         await revertToSnapshot(snapshotId)
     })
@@ -104,6 +105,16 @@ contract('eVote', async (accounts) => {
         tx = await eVoteInstance.register(data[i].publicKey, data[i].publicKeyProof.a, data[i].publicKeyProof.b, data[i].publicKeyProof.c, _merkleProof, {from:accounts[i+1], value:web3.utils.toWei("1","ether")})
         gasUsedRegister.push(tx.receipt.gasUsed.toString())
         log+=`Register: ${gasUsedRegister[0].toString()}\n`         
+    }).timeout(50000 * nVoters);
+
+    it('Throw an error if updating the public key of the last voter', async() => {
+        i = data.length -1
+        _merkleProof = usersMerkleTree.getHexProof(accounts[i+1])                      
+        try{
+            await eVoteInstance.register(data[i-1].publicKey, data[i-1].publicKeyProof.a, data[i-1].publicKeyProof.b, data[i-1].publicKeyProof.c, _merkleProof, {from:accounts[i+1], value:web3.utils.toWei("1","ether")})
+        } catch(err) {
+            assert(String(err).includes("Updating the public key is not allowed"), "error in verifying updating the public key")
+        }        
     }).timeout(50000 * nVoters);
 
     it('Throw an error if an user tries to register but Max number of voters is reached', async() =>{
@@ -118,28 +129,38 @@ contract('eVote', async (accounts) => {
         await revertToSnapshot(snapshotId)
     })
 
-
-    it('Cast valid encrypted votes', async() => {
+    it('Cast valid encrypted votes except the last one', async() => {
         beginVote = (await eVoteInstance.finishRegistartionBlockNumber.call()).toNumber()
         await mineToBlockNumber(beginVote)
-        // let gasused = [];
-        for(let i=0; i<data.length; i++){
+        for(let i=0; i<data.length-1; i++){
             tx = await eVoteInstance.castVote(data[i].encryptedVote, data[i].Idx, data[i].encryptedVoteProof.a, data[i].encryptedVoteProof.b, data[i].encryptedVoteProof.c, {from:accounts[i+1]})
-            // if (i == 0){
-            //     log+=`CastVote-1: ${tx.receipt.gasUsed.toString()}\n`        
-            // }
-            gasUsedCast.push(tx.receipt.gasUsed.toString())
         }
-        log+=`CastVote: ${gasUsedCast[0].toString()}\n`
     }).timeout(100000 * nVoters);
 
     it('Throw an error if elligable user provides invalid encrypted vote', async() => {       
+        i = data.length-1;    
         try{
-            await eVoteInstance.castVote(data[0].encryptedVote, data[1].Idx, data[1].encryptedVoteProof.a, data[1].encryptedVoteProof.b, data[1].encryptedVoteProof.c, {from:accounts[2]})
+            await eVoteInstance.castVote(data[i-1].encryptedVote, data[i].Idx, data[i].encryptedVoteProof.a, data[i].encryptedVoteProof.b, data[i].encryptedVoteProof.c, {from:accounts[i+1]})
         } catch(err) {
             assert(String(err).includes("Invalid encrypted vote"), "error in verifying invalid encrypted")
         }    
     })
+
+    it('Cast valid encrypted vote of the last voter', async() => {
+        i = data.length-1;
+        tx = await eVoteInstance.castVote(data[i].encryptedVote, data[i].Idx, data[i].encryptedVoteProof.a, data[i].encryptedVoteProof.b, data[i].encryptedVoteProof.c, {from:accounts[i+1]})
+        gasUsedCast.push(tx.receipt.gasUsed.toString())
+        log+=`CastVote: ${gasUsedCast[0].toString()}\n`
+    }).timeout(100000 * nVoters);
+
+    it('Throw an error if updating the encrypted vote of the last voter', async() => {
+        i = data.length-1;
+        try{
+            await eVoteInstance.castVote(data[i-1].encryptedVote, data[i].Idx, data[i].encryptedVoteProof.a, data[i].encryptedVoteProof.b, data[i].encryptedVoteProof.c, {from:accounts[i+1]})
+        } catch(err) {
+            assert(String(err).includes("Updating the encrypted vote is not allowed"), "error in verifying updating the encrypted vote")
+        }
+    }).timeout(100000 * nVoters);
 
     it('Malicious Administrator', async() => {
         snapShot = await takeSnapshot();
@@ -155,6 +176,7 @@ contract('eVote', async (accounts) => {
         await revertToSnapshot(snapshotId)
     
     })
+
     it('Honst Administrator', async() => {
         beginTally = (await eVoteInstance.finishVotingBlockNumber.call()).toNumber()
         await mineToBlockNumber(beginTally)
